@@ -129,24 +129,32 @@
             };
 
             async function sendToN8n(message) {
-                try {
-                    const response = await fetch(webhookUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            message: message,
-                            timestamp: new Date().toISOString(),
-                            user: 'website_visitor'
-                        })
-                    });
-                    const data = await response.json();
-                    return data;
-                } catch (error) {
-                    console.error('Ошибка:', error);
-                    return { error: 'Не удалось отправить сообщение' };
-                }
+    // Генерируем или берем существующий sessionId
+    let sessionId = localStorage.getItem('apelsin_session_id');
+    if (!sessionId) {
+        sessionId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('apelsin_session_id', sessionId);
+    }
+
+    try {
+        const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message,
+                timestamp: new Date().toISOString(),
+                user: 'website_visitor',
+                sessionId: sessionId
+            })
+        });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Ошибка:', error);
+        return { error: 'Не удалось отправить сообщение' };
+    }
             }
 
             function addMessage(text, isUser = false) {
